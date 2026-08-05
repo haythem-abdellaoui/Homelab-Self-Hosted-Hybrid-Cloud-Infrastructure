@@ -1,0 +1,7 @@
+---
+- name: Déploiement des Load Balancers HA (Keepalived + HAProxy)
+  hosts: loadbalancers
+  become: true
+  roles:
+    - keepalived
+    - haproxy

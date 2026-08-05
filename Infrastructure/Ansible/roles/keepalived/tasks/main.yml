@@ -1,0 +1,28 @@
+---
+- name: Installer Keepalived et psmisc (pour killall)
+  apt:
+    name:
+      - keepalived
+      - psmisc
+    state: present
+    update_cache: yes
+
+- name: Autoriser le binding sur IP non-locale (VIP)
+  sysctl:
+    name: net.ipv4.ip_nonlocal_bind
+    value: "1"
+    state: present
+    reload: yes
+
+- name: Déployer la configuration Keepalived
+  template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+  notify: Restart Keepalived
+
+- name: S'assurer que Keepalived est démarré et activé au boot
+  service:
+    name: keepalived
+    state: started
+    enabled: yes
+    

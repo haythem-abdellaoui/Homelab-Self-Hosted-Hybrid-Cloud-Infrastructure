@@ -1,0 +1,25 @@
+global
+    log /dev/log local0
+    log /dev/log local1 notice
+    user haproxy
+    group haproxy
+    daemon
+
+defaults
+    log     global
+    mode    http
+    option  httplog
+    option  dontlognull
+    timeout connect 5000ms
+    timeout client  50000ms
+    timeout server  50000ms
+
+frontend http_front
+    bind {{ vip_address.split('/')[0] }}:80
+    default_backend http_back
+
+backend http_back
+    balance roundrobin
+    {% for server in backend_servers %}
+    server {{ server.name }} {{ server.ip }} check
+    {% endfor %}

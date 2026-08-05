@@ -1,0 +1,7 @@
+---
+# Configuration Keepalived (VIP partagée)
+vip_address: "10.0.10.100/24"
+vip_interface: "eth0"
+
+# Configuration HAProxy (À remplir plus tard)
+backend_servers: []
