@@ -1,1 +1,1 @@
-{"Modules":[{"Key":"","Source":"","Dir":"."},{"Key":"load_balancers","Source":"../../modules/lxc","Dir":"../../modules/lxc"}]}
+{"Modules":[{"Key":"","Source":"","Dir":"."},{"Key":"k3s_nodes","Source":"../../modules/vm","Dir":"../../modules/vm"},{"Key":"load_balancers","Source":"../../modules/lxc","Dir":"../../modules/lxc"}]}

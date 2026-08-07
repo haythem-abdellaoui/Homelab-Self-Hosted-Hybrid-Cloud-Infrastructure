@@ -19,3 +19,8 @@ variable "ssh_public_key" {
   type        = string
   description = "Clé SSH publique à injecter via Cloud-Init"
 }
+
+variable "k3s_template_id" {
+  type        = number
+  description = "ID de la VM template Cloud-Init a cloner pour les noeuds K3s"
+}

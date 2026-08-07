@@ -36,3 +36,25 @@ module "load_balancers" {
   datastore_id = "local-lvm"
   disk_size    = 8
 }
+
+# Deploiement des 3 K3s Servers 
+module "k3s_nodes" {
+  source = "../../modules/vm"
+  count  = 3
+
+  vm_name     = "k3s-node-0${count.index + 1}"
+  vm_id       = 201 + count.index
+  template_id = var.k3s_template_id
+  target_node = "pve"
+  
+  # Configuration Matérielle & Réseau
+  memory      = 1536
+  bridge      = "vmbr1"
+  vlan_id     = 20
+  
+  # IPs VLAN 20
+  ip_address  = "10.0.20.2${count.index + 1}/24"
+  gateway     = "10.0.20.1"
+  
+  ssh_key     = file("~/.ssh/id_ed25519.pub")
+}
