@@ -1,0 +1,26 @@
+---
+- name: Installer et initialiser le premier nœud K3s (Primary Master)
+  ansible.builtin.shell: |
+    curl -sfL https://get.k3s.io | K3S_TOKEN="{{ k3s_token }}" sh -s - server --cluster-init
+  args:
+    creates: /usr/local/bin/k3s
+  when: inventory_hostname == k3s_primary_node
+
+- name: Attendre que le kubeconfig soit généré sur le primary
+  ansible.builtin.wait_for:
+    path: /etc/rancher/k3s/k3s.yaml
+    state: present
+  when: inventory_hostname == k3s_primary_node
+
+- name: Joindre les autres serveurs au cluster K3s (HA Control Plane)
+  ansible.builtin.shell: |
+    curl -sfL https://get.k3s.io | K3S_TOKEN="{{ k3s_token }}" sh -s - server --server https://{{ k3s_primary_ip }}:6443
+  args:
+    creates: /usr/local/bin/k3s
+  when: inventory_hostname != k3s_primary_node
+
+- name: Ajuster les permissions du fichier kubeconfig
+  ansible.builtin.file:
+    path: /etc/rancher/k3s/k3s.yaml
+    mode: '0644'
+  ignore_errors: true

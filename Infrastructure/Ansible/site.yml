@@ -5,3 +5,9 @@
   roles:
     - keepalived
     - haproxy
+
+- name: Déploiement du cluster K3s
+  hosts: k3s_servers
+  become: true
+  roles:
+    - k3s

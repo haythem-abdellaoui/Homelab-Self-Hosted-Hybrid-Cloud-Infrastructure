@@ -1,0 +1,4 @@
+---
+k3s_token: "{{ vault_k3s_token }}"
+k3s_primary_node: "k3s-node-01"
+k3s_primary_ip: "10.0.20.21"
