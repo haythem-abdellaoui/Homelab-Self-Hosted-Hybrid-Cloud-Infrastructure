@@ -15,11 +15,11 @@ defaults
     timeout server  50000ms
 
 frontend http_front
-    bind {{ vip_address.split('/')[0] }}:80
+    bind *:80
     default_backend http_back
 
 backend http_back
     balance roundrobin
-    {% for server in backend_servers %}
-    server {{ server.name }} {{ server.ip }} check
+    {% for host in groups['k3s_servers'] %}
+    server {{ host }} {{ hostvars[host]['ansible_host'] }}:80 check
     {% endfor %}
