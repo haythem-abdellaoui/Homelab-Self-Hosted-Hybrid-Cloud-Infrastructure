@@ -1,1 +1,11 @@
 App/conduit-realworld-example-app/backend/.env
+
+# Terraform
+Infrastructure/Terraform/envs/dev/.terraform/
+Infrastructure/Terraform/envs/dev/.terraform.lock.hcl
+Infrastructure/Terraform/envs/dev/*.tfstate
+Infrastructure/Terraform/envs/dev/*.tfstate.*
+Infrastructure/Terraform/envs/dev/*.tfvars
+
+# Environnement et secrets
+.env

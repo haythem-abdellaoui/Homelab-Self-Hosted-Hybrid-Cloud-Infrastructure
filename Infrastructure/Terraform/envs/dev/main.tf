@@ -58,3 +58,13 @@ module "k3s_nodes" {
   
   ssh_key     = file("~/.ssh/id_ed25519.pub")
 }
+
+module "mysql_azure" {
+  source = "../../modules/mysql_azure"
+
+  resource_group_name = "rg-globalnet-dev"
+  location            = "swedencentral"
+  server_name         = "globalnet-mysql-dev"
+  db_name             = "globalnet_db"
+  admin_username      = "globalnetadmin"
+}
