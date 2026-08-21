@@ -1,0 +1,20 @@
+---
+# Versioning
+victoriametrics_version: "1.96.0"
+alertmanager_version: "0.27.0"
+
+# Network & Ports
+victoriametrics_port: 8428
+grafana_port: 3000
+alertmanager_port: 9093
+
+# Scrape targets (Adjust IPs according to your infra)
+proxmox_host_ip: "192.168.1.10" 
+load_balancers:
+  - "10.0.10.2"
+  - "10.0.10.3"
+k3s_nodes:
+  - "10.0.20.21"
+  - "10.0.20.22"
+  - "10.0.20.23"
+pfsense_host_ip: "10.0.40.1"

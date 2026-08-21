@@ -11,3 +11,9 @@
   become: true
   roles:
     - k3s
+
+- name: Deploy Proxmox Monitoring Infrastructure
+  hosts: monitoring
+  become: yes
+  roles:
+    - monitoring

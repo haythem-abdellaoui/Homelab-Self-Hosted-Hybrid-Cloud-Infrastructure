@@ -1,0 +1,148 @@
+---
+- name: Install prerequisite packages
+  ansible.builtin.apt:
+    name:
+      - curl
+      - wget
+      - gnupg2
+      - apt-transport-https
+      - software-properties-common
+      - tar
+    state: present
+    update_cache: yes
+
+# --- 1. Install Grafana ---
+- name: Add Grafana GPG key
+  ansible.builtin.get_url:
+    url: https://apt.grafana.com/gpg.key
+    dest: /etc/apt/keyrings/grafana.asc
+    mode: '0644'
+
+- name: Add Grafana repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/grafana.asc] https://apt.grafana.com stable main"
+    state: present
+    filename: grafana
+
+- name: Install Grafana
+  ansible.builtin.apt:
+    name: grafana
+    state: present
+    update_cache: yes
+
+# --- 2. Install VictoriaMetrics ---
+- name: Create VictoriaMetrics directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /etc/victoriametrics
+    - /var/lib/victoria-metrics-data
+
+- name: Download and extract VictoriaMetrics
+  ansible.builtin.unarchive:
+    src: "https://github.com/VictoriaMetrics/VictoriaMetrics/releases/download/v{{ victoriametrics_version }}/victoria-metrics-linux-amd64-v{{ victoriametrics_version }}.tar.gz"
+    dest: /usr/local/bin/
+    remote_src: yes
+    creates: /usr/local/bin/victoria-metrics-prod
+
+- name: Create Systemd service for VictoriaMetrics
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/victoriametrics.service
+    content: |
+      [Unit]
+      Description=VictoriaMetrics TSDB Engine
+      After=network.target
+
+      [Service]
+      Type=simple
+      ExecStart=/usr/local/bin/victoria-metrics-prod -storageDataPath=/var/lib/victoria-metrics-data -retentionPeriod=1 -promscrape.config=/etc/victoriametrics/prometheus.yml
+      Restart=on-failure
+      RestartSec=10
+
+      [Install]
+      WantedBy=multi-user.target
+    mode: '0644'
+
+# --- 3. Install Alertmanager ---
+- name: Create Alertmanager directory
+  ansible.builtin.file:
+    path: /etc/alertmanager
+    state: directory
+    mode: '0755'
+
+- name: Download and extract Alertmanager
+  ansible.builtin.unarchive:
+    src: "https://github.com/prometheus/alertmanager/releases/download/v{{ alertmanager_version }}/alertmanager-{{ alertmanager_version }}.linux-amd64.tar.gz"
+    dest: /tmp/
+    remote_src: yes
+
+- name: Move Alertmanager binaries
+  ansible.builtin.copy:
+    src: "/tmp/alertmanager-{{ alertmanager_version }}.linux-amd64/{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    mode: '0755'
+    remote_src: yes
+  loop:
+    - alertmanager
+    - amtool
+
+- name: Create basic Alertmanager config
+  ansible.builtin.copy:
+    dest: /etc/alertmanager/alertmanager.yml
+    content: |
+      global:
+        resolve_timeout: 5m
+      route:
+        group_by: ['alertname']
+        group_wait: 10s
+        group_interval: 10s
+        repeat_interval: 1h
+        receiver: 'null'
+      receivers:
+        - name: 'null'
+    mode: '0644'
+
+- name: Create Systemd service for Alertmanager
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/alertmanager.service
+    content: |
+      [Unit]
+      Description=Prometheus Alertmanager
+      After=network.target
+
+      [Service]
+      Type=simple
+      ExecStart=/usr/local/bin/alertmanager --config.file=/etc/alertmanager/alertmanager.yml --storage.path=/var/lib/alertmanager
+      Restart=always
+
+      [Install]
+      WantedBy=multi-user.target
+    mode: '0644'
+
+# --- 4. Deploy Configurations & Start Services ---
+- name: Template VictoriaMetrics scrape config
+  ansible.builtin.template:
+    src: prometheus.yml.j2
+    dest: /etc/victoriametrics/prometheus.yml
+    mode: '0644'
+  notify: Restart VictoriaMetrics
+
+- name: Provision Grafana Datasource
+  ansible.builtin.template:
+    src: victoriametrics-datasource.yaml.j2
+    dest: /etc/grafana/provisioning/datasources/victoriametrics.yaml
+    mode: '0644'
+  notify: Restart Grafana
+
+- name: Ensure all services are started and enabled
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  loop:
+    - victoriametrics
+    - alertmanager
+    - grafana-server
