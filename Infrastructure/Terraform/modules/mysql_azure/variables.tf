@@ -20,6 +20,20 @@ variable "admin_username" {
 	default = "globalnetadmin"
 }
 
+variable "admin_password" {
+	type      = string
+	default   = null
+	sensitive = true
+}
+
+variable "delegated_subnet_id" {
+	type = string
+}
+
+variable "private_dns_zone_id" {
+	type = string
+}
+
 variable "sku_name" {
 	type    = string
 	default = "B_Standard_B1ms"

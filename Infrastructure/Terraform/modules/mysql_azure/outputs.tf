@@ -7,7 +7,7 @@ output "mysql_user" {
 }
 
 output "mysql_password" {
-  value     = random_password.password.result
+  value     = local.admin_password
   sensitive = true
 }
 

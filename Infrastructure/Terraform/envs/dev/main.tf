@@ -59,12 +59,70 @@ module "k3s_nodes" {
   ssh_key     = file("~/.ssh/id_ed25519.pub")
 }
 
-module "mysql_azure" {
-  source = "../../modules/mysql_azure"
+# Azure
 
-  resource_group_name = "rg-globalnet-dev"
-  location            = "swedencentral"
+# 1. Le Resource Group (s'il n'est pas déjà géré ailleurs)
+resource "azurerm_resource_group" "rg" {
+  name     = "rg-globalnet-dev"
+  location = "swedencentral"
+}
+
+# 2. Le VNet et ses Subnets (votre réseau virtuel)
+module "network" {
+  source              = "../../modules/azure_network"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+}
+
+# 3. La BDD MySQL (reliée au subnet dédié)
+module "mysql_azure" {
+  source              = "../../modules/mysql_azure"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
   server_name         = "globalnet-mysql-dev"
   db_name             = "globalnet_db"
   admin_username      = "globalnetadmin"
+  admin_password      = var.db_password
+  delegated_subnet_id = module.network.mysql_subnet_id
+  private_dns_zone_id = module.network.mysql_private_dns_zone_id
+
+  depends_on = [module.network]
+}
+
+# 4. Le Tailscale Router (relié au subnet VM)
+module "tailscale_router_azure" {
+  source              = "../../modules/tailscale_router_azure"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  subnet_id           = module.network.vm_subnet_id
+  admin_username      = "azureuser"
+  ssh_public_key      = var.ssh_public_key
+
+  depends_on = [module.mysql_azure]
+}
+
+
+# Monitoring LXC 
+module "monitoring_lxc" {
+  source = "../../modules/monitoring_lxc" 
+
+  # Paramètres obligatoires
+  target_node    = "pve"                             # Nom de ton nœud Proxmox
+  vm_id          = 401                               
+  hostname       = "monitoring-lxc"
+  template_id    = "local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
+  ip_address     = "10.0.40.10/24"                   # IP statique dans le sous-réseau du VLAN 40
+  gateway        = "10.0.40.1"                    # Passerelle du VLAN 40
+  ssh_public_key = file("~/.ssh/id_ed25519.pub")
+
+  # Ajustements pour le LXC de Monitoring
+  os_type   = "debian" 
+  memory    = 1024     # 1 GB RAM pour tenir la stack VictoriaMetrics + Grafana
+  swap      = 512
+  cores     = 1
+  disk_size = 8
+
+  # Réseau & Isolement VLAN
+  bridge   = "vmbr1"
+  vlan_tag = 40        # Placement direct dans le VLAN 40
 }

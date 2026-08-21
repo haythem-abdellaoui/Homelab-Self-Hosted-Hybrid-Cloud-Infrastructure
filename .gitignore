@@ -9,3 +9,4 @@ Infrastructure/Terraform/envs/dev/*.tfvars
 
 # Environnement et secrets
 .env
+imp.txt

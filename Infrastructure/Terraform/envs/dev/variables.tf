@@ -24,3 +24,8 @@ variable "k3s_template_id" {
   type        = number
   description = "ID de la VM template Cloud-Init a cloner pour les noeuds K3s"
 }
+
+variable "db_password" {
+  type      = string
+  sensitive = true
+}
