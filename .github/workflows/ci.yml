@@ -73,22 +73,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract Metadata (Backend)
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ github.repository }}-backend
-          tags: |
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-            type=sha,format=short
-
       - name: Build & Push Backend Image
         uses: docker/build-push-action@v5
         with:
           context: ${{ env.APP_DIR }}
           file: ${{ env.APP_DIR }}/backend/Dockerfile
           push: true
-          tags: ghcr.io/haythem-abdellaoui/proxmox-homelab-infrastructure-backend:latest
+          tags: |
+            ghcr.io/haythem-abdellaoui/proxmox-homelab-infrastructure-backend:latest
+            ghcr.io/haythem-abdellaoui/proxmox-homelab-infrastructure-backend:${{ github.sha }}
 
   # -------------------------------------------------------------
   # JOB 3 : BUILD & PUSH FRONTEND
@@ -116,19 +109,39 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract Metadata (Frontend)
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ github.repository }}-frontend
-          tags: |
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-            type=sha,format=short
-
       - name: Build & Push Frontend Image
         uses: docker/build-push-action@v5
         with:
           context: ${{ env.APP_DIR }}
           file: ${{ env.APP_DIR }}/frontend/Dockerfile
           push: true
-          tags: ghcr.io/haythem-abdellaoui/proxmox-homelab-infrastructure-frontend:latest
+          tags: |
+            ghcr.io/haythem-abdellaoui/proxmox-homelab-infrastructure-frontend:latest
+            ghcr.io/haythem-abdellaoui/proxmox-homelab-infrastructure-frontend:${{ github.sha }}
+
+  # -------------------------------------------------------------
+  # JOB 4 : MISE À JOUR DES MANIFESTS K8S (GITOPS)
+  # -------------------------------------------------------------
+  update-manifests:
+    name: 🚀 Update K8s Manifests
+    needs: [build-backend, build-frontend]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Update Image Tags in K8s Files
+        run: |
+          sed -i 's|image: ghcr.io/haythem-abdellaoui/proxmox-homelab-infrastructure-backend:.*|image: ghcr.io/haythem-abdellaoui/proxmox-homelab-infrastructure-backend:${{ github.sha }}|g' k8s/backend.yaml
+          sed -i 's|image: ghcr.io/haythem-abdellaoui/proxmox-homelab-infrastructure-frontend:.*|image: ghcr.io/haythem-abdellaoui/proxmox-homelab-infrastructure-frontend:${{ github.sha }}|g' k8s/frontend.yaml
+
+      - name: Commit & Push Changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -am "ci: update k8s images to sha-${{ github.sha }}" || echo "No changes to commit"
+          git push
