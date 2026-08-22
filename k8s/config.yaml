@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  NODE_ENV: "development" # ou "production" selon votre config.json
+  PORT: "3001"
+  # Azure Database
+  DB_DIALECT: "mysql"
+  DIALECT: "mysql"
+  dialect: "mysql"
+  DEV_DB_DIALECT: "mysql"
+  DEV_DB_USERNAME: "globalnetadmin"
+  DEV_DB_NAME: "globalnet_db"
+  DEV_DB_HOSTNAME: "azure-mysql.default.svc.cluster.local"
