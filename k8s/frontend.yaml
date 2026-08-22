@@ -39,7 +39,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ghcr.io/haythem-abdellaoui/proxmox-homelab-infrastructure-frontend:52698c6302f1c27c9d335063d4badefa1eab11a7
+          image: ghcr.io/haythem-abdellaoui/proxmox-homelab-infrastructure-frontend:ead5f188b6692acd7bbd3c320f509081759108d0
           imagePullPolicy: Always
           ports:
             - containerPort: 80
