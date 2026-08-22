@@ -6,7 +6,7 @@
 header {
   top: 0;
   position: sticky;
-  background-color: #fff;
+  background-color: blue;
   z-index: 1;
 }
 
