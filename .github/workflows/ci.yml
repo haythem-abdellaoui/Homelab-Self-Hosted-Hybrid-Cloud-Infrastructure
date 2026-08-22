@@ -85,13 +85,10 @@ jobs:
       - name: Build & Push Backend Image
         uses: docker/build-push-action@v5
         with:
-          context: ./${{ env.APP_DIR }}/backend
-          file: ./${{ env.APP_DIR }}/backend/Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          context: .
+          file: ./App/conduit-realworld-example-app/backend/Dockerfile
+          push: true
+          tags: ghcr.io/haythem-abdellaoui/proxmox-homelab-infrastructure-backend:latest
 
   # -------------------------------------------------------------
   # JOB 3 : BUILD & PUSH FRONTEND
@@ -131,10 +128,7 @@ jobs:
       - name: Build & Push Frontend Image
         uses: docker/build-push-action@v5
         with:
-          context: ./${{ env.APP_DIR }}/frontend
-          file: ./${{ env.APP_DIR }}/frontend/Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          context: .
+          file: ./App/conduit-realworld-example-app/frontend/Dockerfile
+          push: true
+          tags: ghcr.io/haythem-abdellaoui/proxmox-homelab-infrastructure-frontend:latest
