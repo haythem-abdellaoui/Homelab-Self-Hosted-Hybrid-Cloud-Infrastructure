@@ -17,3 +17,9 @@
   become: yes
   roles:
     - monitoring
+
+- name: Deploy Node Exporter on all nodes
+  hosts: all
+  become: yes
+  roles:
+    - node_exporter
