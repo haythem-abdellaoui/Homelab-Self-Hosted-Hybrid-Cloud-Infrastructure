@@ -17,7 +17,6 @@ spec:
         - name: cloudflared
           image: cloudflare/cloudflared:latest
           args:
-            - tunnel
             - --url
             - http://traefik.kube-system.svc.cluster.local:80
             - --no-autoupdate
