@@ -1,4 +1,4 @@
-# GlobalNet — Self-Hosted Hybrid Cloud Infrastructure
+# Homelab — Self-Hosted Hybrid Cloud Infrastructure
 
 ![Architecture Diagram](./assets/architecture-diagram.png)
 
@@ -246,4 +246,3 @@ That commit is the actual hand-off point to CD: Argo CD's `Application` (Section
 
 ---
 
-*More sections (application architecture, etc.) coming soon.*
