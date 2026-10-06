@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: ghcr.io/haythem-abdellaoui/proxmox-homelab-infrastructure-backend:4d56f216a32c47bc6a49bb743150c76975ea5d00
+          image: ghcr.io/haythem-abdellaoui/proxmox-homelab-infrastructure-backend:dc43ebf91f7ce74bf4b6989af5ab8d4496b86c8d
           imagePullPolicy: Always
           ports:
             - containerPort: 3001
